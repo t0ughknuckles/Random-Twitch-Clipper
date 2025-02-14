@@ -1,8 +1,8 @@
  # this powershell script will return an access token and the channel ID to be able to use the Twitch API.
  
- $clientId = 'CLIENT_ID'
+ $clientId     = 'CLIENT_ID'
  $clientSecret = 'CLIENT_SECRET'
- $username = 'USERNAME' # the username of the channel youre pulling clips from
+ $username     = 'USERNAME' # the username of the channel youre pulling clips from
  
  $tokenUrl = 'https://id.twitch.tv/oauth2/token'
  $tokenBody = @{
