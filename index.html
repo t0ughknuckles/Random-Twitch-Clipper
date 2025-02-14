@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Clipper</title>
+    <style>
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 aspect ratio */
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <iframe id="clipPlayer" allow="autoplay" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        const clientId      = ' ';
+        const accessToken   = ' '; 
+        const broadcasterId = ' '; // channel ID
+
+        let allClips         = []; 
+        let shuffledClips    = []; 
+        let currentClipIndex = 0; 
+        let clipStartTime    = null; 
+
+        async function fetchAllClips() {
+            try {
+                let clips = [];
+                let cursor = null; 
+
+
+                do {
+                    const url = `https://api.twitch.tv/helix/clips?broadcaster_id=${broadcasterId}&first=100${cursor ? `&after=${cursor}` : ''}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Client-Id': clientId
+                        }
+                    });
+
+                    const data = await response.json();
+                    clips = clips.concat(data.data); 
+                    cursor = data.pagination.cursor; 
+                } while (cursor); 
+
+                console.log('got clips: ', clips); 
+
+                if (clips.length === 0) {
+                    console.error('no clips found for this channel ID.');
+                    return;
+                }
+
+                allClips = clips;
+                shuffledClips = shuffleArray([...allClips]); 
+                console.log('shuffled clips: ', shuffledClips);
+
+                playNextClip();
+            } catch (error) {
+                console.error('ERROR: ', error);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function playNextClip() {
+            if (currentClipIndex >= shuffledClips.length) {
+                console.log('reshuffling playlist');
+                shuffledClips = shuffleArray([...allClips]);
+                currentClipIndex = 0; 
+            }
+
+            const clip = shuffledClips[currentClipIndex];
+            const clipUrl = `${clip.embed_url}&parent=${window.location.hostname}&autoplay=true`;
+            console.log('playing clip: ', clipUrl); 
+
+            const clipPlayer = document.getElementById('clipPlayer');
+            clipPlayer.src = clipUrl;
+
+            clipStartTime = Date.now();
+
+            pollClipStatus(clip.duration);
+
+            currentClipIndex++;
+        }
+
+        function pollClipStatus(clipDuration) {
+            const pollInterval = 1000; 
+            const clipPlayer = document.getElementById('clipPlayer');
+
+            const intervalId = setInterval(() => {
+                const currentTime = Date.now();
+                const elapsedTime = (currentTime - clipStartTime) / 1000;
+
+                if (elapsedTime >= clipDuration) {
+                    console.log('clip has ended. getting the next clip');
+                    clearInterval(intervalId); 
+                    playNextClip(); 
+                }
+            }, pollInterval);
+        }
+
+        fetchAllClips();
+    </script>
+</body>
+</html>
