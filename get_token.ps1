@@ -1,4 +1,4 @@
- # this powershell script will return an access token and the channel ID to be able to use the Twitch API.
+ # this powershell script will return an access token and the channel ID, giving you the ability to use the Twitch API.
  
  $clientId     = 'CLIENT_ID'
  $clientSecret = 'CLIENT_SECRET'
