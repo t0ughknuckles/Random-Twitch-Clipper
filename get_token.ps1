@@ -25,7 +25,6 @@
  $broadcasterId = $userResponse.data[0].id
  Write-Output "ID: $broadcasterId"
 
- # Step 3: Fetch clips from the channel
  $clipsUrl = "https://api.twitch.tv/helix/clips?broadcaster_id=$broadcasterId&first=100"
  $clipsHeaders = @{
      'Authorization' = "Bearer $accessToken"
